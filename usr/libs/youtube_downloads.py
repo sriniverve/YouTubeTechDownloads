@@ -10,22 +10,24 @@ class YouTubeDownloads:
 
     def get_video_details(self):
         search_url = f'https://www.googleapis.com/youtube/v3/search?part=snippet&max_results=100&q={self.search_string}&key={self.api_key}'
-        print(search_url)
         response = requests.get(search_url)
         json_response = json.loads(response.text)
         video_data = []
         try:
             for item in range(50):
-                if json_response["items"][item]["id"]["kind"] == "youtube#video":
-                    try:
-                        videoID = json_response["items"][item]["id"]["videoId"]
-                        videoTitle = json_response["items"][item]["snippet"]["title"]
-                        video_data.append({"Title": videoTitle, "Video Link": "https://www.youtube.com/watch?v=" + videoID})
-                        if len(video_data) == 11:
-                            break
-                    except:
-                        found = None
-
+                try:
+                    if json_response["items"][item]["id"]["kind"] == "youtube#video":
+                        try:
+                            videoID = json_response["items"][item]["id"]["videoId"]
+                            videoTitle = json_response["items"][item]["snippet"]["title"]
+                            viewCount = self.get_channel_statistics(videoID)
+                            video_data.append({"Title": videoTitle, "Video Link": "https://www.youtube.com/watch?v=" + videoID, "Views": viewCount})
+                            if len(video_data) == 11:
+                                break
+                        except:
+                            found = None
+                except:
+                    found = None
             return video_data
 
         except:
@@ -33,18 +35,22 @@ class YouTubeDownloads:
                 print("There are only a thousand times where you can call the APIs. Try after a day ;-)")
                 return None
 
-    def get_channel_stats(self):
-        url = f'https://www.googleapis.com/youtube/v3/channels/?part=statistics&id={self.channel_id}&key={self.api_key}'
-        print(url)
-
+    def get_channel_statistics(self, videoID):
+        url = f'https://www.googleapis.com/youtube/v3/videos/?part=statistics&id={videoID}&key={self.api_key}'
         response = requests.get(url)
         json_response = json.loads(response.text)
-        print(json_response)
         try:
-            data = json_response["items"][0]["statistics"]
+            data = json_response["items"][0]["statistics"]["viewCount"]
         except:
             data = None
 
         self.get_channel_stats = data
         return data
+
+    def print_data(self, videoID):
+        print(videoID)
+
+
+
+
 
